@@ -1,0 +1,4 @@
+[package]
+name = "osgp-oma-digest"
+version = "0.0.1"
+authors = ["Tim Taubert <tim@timtaubert.de>"]
