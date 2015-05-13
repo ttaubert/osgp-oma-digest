@@ -24,7 +24,7 @@ impl OMADigest for [u8] {
         let j = (7u8.wrapping_sub(l as u8) % 8) as usize;
 
         // The current key bit to work with.
-        let key_bit = key[(l / 8) % KEY_SIZE] >> 7 - j;
+        let key_bit = key[(l / 8) % KEY_SIZE] >> (7 - j);
 
         // The block byte at the given index or 0 if the block is too
         // short. This basically implements zero-padding short blocks.
@@ -35,10 +35,10 @@ impl OMADigest for [u8] {
         let xc = !state[j].wrapping_add(j as u8);
 
         // Switch based on key bit.
-        state[j] = if key_bit % 2 == 1 {
-          yz.wrapping_add(xc).rotate_left(1)
+        state[j] = if key_bit & 1 == 1 {
+          yz.wrapping_add(xc.rotate_left(1))
         } else {
-          yz.wrapping_sub(xc).rotate_right(1)
+          yz.wrapping_sub(xc.rotate_right(1))
         };
       }
     }
@@ -58,12 +58,12 @@ mod test {
 
   #[test]
   fn test() {
-    // TODO find some test vectors or a reference implementation
-
-    let key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2];
-    let data = b"Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby";
-    let hex = data.oma_digest(&key).iter().fold(String::new(), |s, b| format!("{}{:02x}", s, b));
-    assert_eq!(hex, "8ce33dbc13805261");
+    let key = [0xdf; 12];
+    let data = [0x02, 0x02, 0x00, 0x30, 0x00, 0x03, 0x7f, 0x30, 0xea, 0x6d,
+                0x00, 0x00, 0x00, 0x0d, 0x00, 0x20, 0x98, 0x00, 0x31, 0xc3,
+                0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11];
+    let tag = [0xdb, 0xe5, 0xcd, 0xe5, 0x07, 0xb1, 0xcb, 0x3d];
+    assert_eq!(&data.oma_digest(&key), &tag);
   }
 }
 
